@@ -1,0 +1,61 @@
+---
+title: "626 midterm1 "
+author: "Borui Chen"
+date: "2023-04-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#import data set
+setwd("~/R file/626project 1")
+train <- read.table("training_data.txt", header = TRUE)
+test <- read.table("test_data.txt", header = TRUE)
+```
+Binary Classification
+```{r}
+library(caret)
+library(e1071)
+#set dynamic activity to 0, and all other activities to 1
+train_1 <- train
+train_1[train$activity <= 3,]$activity = 1 
+train_1[train$activity >= 4,]$activity = 0
+train_1$activity <- as.factor(train_1$activity)
+train_1$subject <- NULL
+```
+
+```{r}
+# fit GLM model
+glm.fit <- train(activity~., data= train_1, method="glm", family = "binomial")
+```
+
+```{r}
+#Prediction
+prediction_1 <- predict(glm.fit, newdata = test)
+write.table(prediction_1, "binary_9527.txt", sep="\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
+
+```
+
+```{r}
+#set postural transitions equal to 7, and leave everything else the same
+train_2 <- train
+train_2[train_2$activity >=7,]$activity = 7
+train_2$activity <- as.factor(train_2$activity)
+train_2$subject <- NULL
+```
+
+```{r}
+#fit a cross validation SVM model
+control <- trainControl(method="cv", number=10)
+svm.fit <- train(activity ~ ., data = train_2, method = "svmLinear", trControl = control)
+```
+
+```{r}
+#predictions
+prediction_2 <- predict(svm.fit, newdata = test)
+write.table(prediction_2, "multiclass_9527.txt", sep="\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
+```
+
